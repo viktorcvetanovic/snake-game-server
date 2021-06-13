@@ -5,27 +5,15 @@
  */
 package entity;
 
-import java.io.Serializable;
-import java.util.List;
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
+import java.util.List;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 /**
- *
  * @author vikto
  */
 @Entity
@@ -57,13 +45,13 @@ public class User implements Serializable {
     private String gameName;
     @Column(name = "money")
     private Integer money;
-    @ManyToMany(cascade = CascadeType.MERGE)
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
     @JoinTable(name = "userskin", inverseJoinColumns = {
         @JoinColumn(name = "skin_id", referencedColumnName = "skin_id")}, joinColumns = {
         @JoinColumn(name = "user_id", referencedColumnName = "user_id")})
     private List<Skins> skinsList;
-    @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL)
-//    @JoinTable(name = "bestscores", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"))
+    @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Fetch(value = FetchMode.SUBSELECT)
     private List<Bestscores> bestscoresList;
 
     public User() {
@@ -173,6 +161,16 @@ public class User implements Serializable {
     @Override
     public String toString() {
         return "entity.User[ userId=" + userId + " ]";
+    }
+
+    public void addSkinsToList(Skins s) {
+        if (!skinsList.contains(s)) {
+            skinsList.add(s);
+        }
+    }
+
+    public void addScoreToList(Bestscores s) {
+        bestscoresList.add(s);
     }
 
 }

@@ -6,45 +6,47 @@
 package comunnication;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author vikto
- * @param <T>
+ *
  */
 public class ServerComunnicationModel<T> implements Serializable {
 
-    private String reason;
-    private List<T> data;
+    private CommunicationReasonsEnum reason;
+    private Map<String, T> map;
 
     public ServerComunnicationModel() {
+        map = new HashMap();
     }
 
-    public ServerComunnicationModel(String reason, List<T> data) {
+    public ServerComunnicationModel(CommunicationReasonsEnum reason, Map<String, T> map) {
         this.reason = reason;
-        this.data = data;
+        this.map = map;
     }
 
-    public String getReason() {
+    public CommunicationReasonsEnum getReason() {
         return reason;
     }
 
-    public void setReason(String reason) {
+    public void setReason(CommunicationReasonsEnum reason) {
         this.reason = reason;
     }
 
-    public List<T> getData() {
-        return data;
+    public Map<String, T> getMap() {
+        return map;
     }
 
-    public void setData(List<T> data) {
-        this.data = data;
+    public void setMap(Map<String, T> map) {
+        this.map = map;
     }
 
     @Override
     public String toString() {
-        return "ServerComunnicationModel{" + "reason=" + reason + ", data=" + data + '}';
+        return "ServerComunnicationModel{" + "reason=" + reason + ", map=" + map + '}';
     }
 
 }

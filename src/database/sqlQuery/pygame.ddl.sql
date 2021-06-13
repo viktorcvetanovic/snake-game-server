@@ -16,9 +16,9 @@ drop table if exists USERSKIN;
 CREATE TABLE USERSKIN(
 user_id INT,
 skin_id INT,
-FOREIGN KEY (skin_id) REFERENCES SKINS(skin_id),
-FOREIGN KEY (user_id) REFERENCES USER(user_id),
-UNIQUE (user_id, skin_id)
+ FOREIGN KEY (skin_id) REFERENCES SKINS(skin_id),
+ FOREIGN KEY (user_id) REFERENCES USER(user_id),
+PRIMARY KEY(user_id, skin_id)
 );
 
 -- skins table

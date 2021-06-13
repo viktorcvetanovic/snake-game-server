@@ -6,11 +6,14 @@
 package server;
 
 import comunnication.ServerComunnicationModel;
+import static dataUtil.DataUtil.checkMethodForDatabase;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,58 +23,112 @@ import java.util.logging.Logger;
  */
 public class Server {
 
+    public static ServerSocket serverSocket;
+
+    public static Integer sessionId = 1;
+    private static List<Socket> listOfScokets = new ArrayList<>();
+
     /**
-     * @param args the command line arguments
+     * main metoda
+     *
+     * @param args parametar
+     * @throws IOException exception
+     * @throws InterruptedException exception
      */
     public static void main(String[] args) throws IOException, InterruptedException {
-        // CrudUser.addUser(new User(null, "viktor2", "viktor2", "viktor2", "viktor2", 1234, Arrays.asList(new Skins(2)), Arrays.asList(new Bestscores(2))));
 
-        ServerSocket serverSocket = new ServerSocket(ServerConfig.PORT);
+        serverSocket = new ServerSocket(ServerConfig.PORT);
 
-        Thread serverThread = new Thread(() -> {
-            run(serverSocket);
-        });
-        serverThread.start();
         while (true) {
-            Thread.sleep(100);
+            System.out.println("SERVER IS STARTED");
+            Socket socket = serverSocket.accept();
+            listOfScokets.add(socket);
+            Thread serverThread = new Thread(() -> {
+                try {
+                    System.out.println("first thread");
+
+                    run(socket);
+
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                    sessionId = 1;
+                }
+            });
+            serverThread.start();
+
         }
+
     }
 
-    public static void readInfoFromClient(Socket s) {
+    /**
+     * metoda koja sluzi da cita informacije sa klijenta
+     *
+     * @param socket za konekciju
+     * @throws IOException exception
+     */
+    public static void readInfoFromClient(Socket socket) throws IOException {
         try {
-            ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             ServerComunnicationModel model = (ServerComunnicationModel) in.readObject();
-            System.out.println(model.toString());
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            checkMethodForDatabase(socket, model);
+
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println(ex.getMessage());
         }
     }
 
-    public static void sendInfoToClient(Socket s, ServerComunnicationModel model) {
-        try {
-            ObjectOutputStream data = new ObjectOutputStream(s.getOutputStream());
-            data.writeObject(model);
-            data.flush();
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+    /**
+     * metoda koja sluzi da salje informacije klijentu
+     *
+     * @param type razlika izmedju slanje jednom klijentu ili svima
+     * @param socket za slanje
+     * @param model podatak koji se salje
+     */
+    public static void sendInfoToClient(String type, Socket socket, ServerComunnicationModel model) {
+        if (type.equals("many")) {
+            listOfScokets.forEach(e -> {
+                if (e.isConnected()) {
+                    try {
+                        ObjectOutputStream data = new ObjectOutputStream(e.getOutputStream());
+                        data.writeObject(model);
+                        data.flush();
+                    } catch (IOException ex) {
+                        System.err.println(ex.getMessage());
+                    }
+                } else {
+                    listOfScokets.remove(e);
+                }
+            });
+        } else {
+            try {
+                ObjectOutputStream data = new ObjectOutputStream(socket.getOutputStream());
+                data.writeObject(model);
+                data.flush();
+            } catch (IOException ex) {
+                System.err.println(ex.getMessage());
+            }
         }
+
     }
 
-    public static void run(ServerSocket serverSocket) {
+    /**
+     * metoda koja se izvrsava u threadu
+     *
+     * @param socket za konekciju sa klijentom
+     */
+    public static void run(Socket socket) {
         while (true) {
             try {
                 // Connect to the server
-                Socket s = serverSocket.accept();
                 System.out.println("recieved connection");
-                readInfoFromClient(s);
+                readInfoFromClient(socket);
                 System.out.println("read info from client connection");
-//                sendInfoToClient(s);
-                System.out.println("send info to client");
             } catch (IOException ex) {
-                System.out.println(ex.getMessage());
+                System.err.println(ex.getMessage());
+                sessionId = 1;
             }
         }
     }
+
 }
